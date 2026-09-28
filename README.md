@@ -66,10 +66,10 @@ pnpm build:api
 - `docs`: tài liệu hệ thống
 - `infra`: Docker và hạ tầng
 
-## Triển khai GitHub
+## Triển khai
 
-- Push lên `main` sẽ chạy `.github/workflows/deploy.yml`, cài dependencies tại `apps/legacy-vite/`, build Vite và deploy static site lên GitHub Pages.
-- GitHub Pages không chạy Next.js SSR hoặc NestJS API; các app `apps/web` và `apps/api` hiện cần nền tảng/server phù hợp riêng.
+- Push lên `main` chạy `.github/workflows/deploy.yml`, build `apps/legacy-vite/` và deploy bản Vite cũ lên `https://haotram0705-rgb.github.io/Plain_shop/`.
+- `apps/web` là Next.js 14 và cần runtime Node.js; triển khai riêng lên Vercel. Xem [docs/deployment.md](./docs/deployment.md) để cài Root Directory, biến môi trường, API và CORS.
+- `apps/api` và PostgreSQL cũng cần host riêng; GitHub Pages workflow không deploy chúng.
 - Trước khi phát hành, kiểm tra `pnpm lint`, `pnpm build:web` và `pnpm build:api`.
-- Không đưa `.env`, token, khóa API, database, thư mục upload hoặc file IDE vào repository.
-- Nếu từng commit bí mật, xoay vòng/đổi bí mật trước khi công khai repository.
+- Không đưa `.env`, token, khóa API, database, thư mục upload hoặc file IDE vào repository. Nếu từng commit bí mật, xoay vòng chúng.
