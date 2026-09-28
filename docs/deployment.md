@@ -1,55 +1,39 @@
 # Triển khai
 
-Repository chứa ba ứng dụng có quy trình triển khai riêng:
+## GitHub Pages — website Plant Shop
 
-| Ứng dụng | Nền tảng | URL / đường dẫn |
-| --- | --- | --- |
-| `apps/legacy-vite` (bản storefront cũ) | GitHub Pages qua `.github/workflows/deploy.yml` | `https://haotram0705-rgb.github.io/Plain_shop/` |
-| `apps/web` (Next.js 14, storefront hiện hành) | Vercel | URL `.vercel.app` do Vercel cấp, hoặc domain riêng đã xác minh |
-| `apps/api` (NestJS) | Node.js host riêng | URL API công khai cần cấu hình trong `NEXT_PUBLIC_API_URL` |
+GitHub Actions build app Vite tại `apps/legacy-vite/`; app này dùng lại giao diện storefront mới từ `apps/web` và chạy dạng SPA tĩnh. Push lên `main` sẽ tự build và deploy qua `.github/workflows/deploy.yml`.
 
-GitHub Pages chỉ phục vụ bản Vite tĩnh trong workflow hiện tại. `apps/web` dùng middleware và route handler đăng nhập ở server nên cần runtime Next.js; không đổi workflow Pages sang build static cho app này.
+- URL của website: `https://haotram0705-rgb.github.io/Plain_shop/`
+- URL trên có phần `/Plain_shop/` vì đây là GitHub Pages project site của repository `Plain_shop`.
+- URL gốc `https://haotram0705-rgb.github.io/` là account site riêng; repo hiện tại không deploy ở đó.
+- Workflow copy `dist/index.html` thành `dist/404.html` để các route của SPA tiếp tục mở được khi tải lại trang.
 
-## Deploy `apps/web` lên Vercel
+Không cần Vercel, Node.js server hay database để hiển thị trang chủ, nội dung, catalog tĩnh và giỏ hàng lưu trong trình duyệt.
 
-1. Import repository `haotram0705-rgb/Plain_shop` vào Vercel và tạo project riêng cho Next.js.
-2. Trong **Build and Deployment** đặt **Root Directory** là `apps/web`; framework là **Next.js**. Giữ lệnh install/build/output mặc định do Vercel nhận diện Next.js và pnpm workspace. Repository dùng `pnpm-lock.yaml` ở root.
-3. Nếu Vercel hỏi về file ngoài Root Directory, bật **Include source files outside the Root Directory in the Build Step** để pnpm workspace có thể đọc cấu hình và lockfile ở root.
-4. Thêm các biến môi trường sau cho Production (và Preview nếu cần):
+## Tính năng cần backend công khai
 
-   | Biến | Giá trị |
-   | --- | --- |
-   | `NEXT_PUBLIC_SITE_URL` | URL production Vercel của app, ví dụ `https://<project>.vercel.app` |
-   | `NEXT_PUBLIC_API_URL` | URL HTTPS công khai của `apps/api`, không có dấu `/` ở cuối |
-   | `ADMIN_EMAIL` | Email quản trị production |
-   | `ADMIN_PASSWORD` | Mật khẩu quản trị mạnh, riêng cho production |
+GitHub Pages chỉ host file tĩnh. Không có Next.js middleware, API route hoặc API NestJS tự chạy trong deployment này.
 
-   Không dùng giá trị localhost hoặc tài khoản mẫu trong production. Chỉ lưu thông tin nhạy cảm trong **Vercel Environment Variables**, không commit vào repository.
-5. Deploy. Mỗi lần push lên `main`, Vercel sẽ tạo deployment mới cho `apps/web`. GitHub Actions hiện tại vẫn deploy `apps/legacy-vite` lên Pages như trước.
+- Catalog và thông tin sản phẩm mẫu, điều hướng, bộ lọc, yêu thích/so sánh và giỏ hàng trên trình duyệt vẫn dùng được.
+- Đăng nhập, tài khoản khách hàng và quản trị bị ẩn khỏi bản static; kiểm tra quyền chỉ ở trình duyệt không an toàn.
+- Gửi đơn, gửi yêu cầu tư vấn, báo giá và upload cần deploy `apps/api` cùng PostgreSQL lên host Node.js có HTTPS công khai.
+- Khi API sẵn sàng, thêm repository **Actions variable** tên `VITE_API_URL` với origin API (ví dụ `https://api.example.com`, không có `/` cuối), rồi chạy lại workflow/push commit mới.
+- Cấu hình `WEB_ORIGIN=https://haotram0705-rgb.github.io` trong API để cho phép CORS từ GitHub Pages. `WEB_ORIGIN` chỉ là origin, không thêm `/Plain_shop/`.
+- Không đặt mật khẩu, database URL, SMTP credentials hoặc secret trong biến `VITE_*`; các giá trị `VITE_*` được nhúng vào JavaScript công khai.
+- Nếu không cấu hình `VITE_API_URL`, các biểu mẫu báo rằng chức năng gửi online chưa được kết nối thay vì báo thành công giả.
 
-## API và CORS
+Lưu trữ `/uploads` cần volume bền vững hoặc object storage; filesystem tạm của host API không phù hợp để giữ media lâu dài.
 
-Vercel chỉ host `apps/web`; API NestJS và PostgreSQL chưa được deploy bởi workflow GitHub Pages này. Để đặt hàng, tải ảnh dịch vụ và gửi yêu cầu tư vấn hoạt động trên production:
-
-- Deploy `apps/api` cùng PostgreSQL lên một host hỗ trợ Node.js và cấu hình migrations/secrets theo `apps/api/.env.example`.
-- Đặt `NEXT_PUBLIC_API_URL` thành URL công khai của API trong Vercel, rồi redeploy frontend.
-- Đặt `WEB_ORIGIN` bên API thành origin của app Vercel (ví dụ `https://<project>.vercel.app`). Với custom domain, thêm origin đó vào danh sách cho phép CORS.
-- Lưu trữ `/uploads` bằng volume bền vững hoặc object storage; filesystem tạm của host không phù hợp để giữ media lâu dài.
-
-Đăng nhập admin của Next.js kiểm tra `ADMIN_EMAIL` và `ADMIN_PASSWORD` trong Vercel, rồi tạo cookie phiên bằng route handler `/api/auth/login`.
-
-## GitHub Pages và domain
-
-- `https://haotram0705-rgb.github.io/Plain_shop/` là project site của repository `Plain_shop` và tiếp tục hiển thị app Vite cũ.
-- `https://haotram0705-rgb.github.io/` là URL account site riêng; nó không tự động trỏ sang repository `Plain_shop` hoặc deployment trên Vercel.
-- Không thể chuyển hostname `github.io` sang Vercel như một custom domain. Để dùng domain riêng trên Vercel, cần sở hữu domain đó và cấu hình DNS theo hướng dẫn Vercel.
-
-## Kiểm tra trước khi phát hành
+## Kiểm tra và publish
 
 ```bash
-pnpm build:web
-pnpm build:api
+npm --prefix apps/legacy-vite test
 npm --prefix apps/legacy-vite run build
 ```
 
-Không commit `.env`, mật khẩu, token, thông tin database hoặc dữ liệu production.
+Sau khi build xong, workflow deploy trên push `main`. Theo dõi trạng thái tại GitHub repository → **Actions**. Khi workflow hoàn tất, mở `https://haotram0705-rgb.github.io/Plain_shop/`.
+
+## Ứng dụng Next.js server
+
+`apps/web` vẫn là ứng dụng Next.js 14 có middleware/API đăng nhập; nó không còn là deployment target của GitHub Pages. Muốn chạy toàn bộ phần server/admin của Next.js, cần một host hỗ trợ Node.js và triển khai API/database riêng.

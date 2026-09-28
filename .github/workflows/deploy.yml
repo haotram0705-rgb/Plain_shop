@@ -31,6 +31,8 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
 
       - name: Support client-side routes
         run: cp dist/index.html dist/404.html

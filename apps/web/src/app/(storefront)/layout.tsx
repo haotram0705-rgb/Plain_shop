@@ -6,11 +6,11 @@ import { MobileTabBar } from '@/components/layout/MobileTabBar';
 import { ContactWidget } from '@/components/layout/ContactWidget';
 import { ThemeRuntime } from '@/components/layout/ThemeRuntime';
 
-export default function StorefrontLayout({ children }: { children: React.ReactNode }) {
+export default function StorefrontLayout({ children, staticSite = false }: { children: React.ReactNode; staticSite?: boolean }) {
   return (
     <div className="site-shell">
       <ThemeRuntime />
-      <Header />
+      <Header staticSite={staticSite} />
       <main>{children}</main>
       <ContactWidget />
       <Footer />

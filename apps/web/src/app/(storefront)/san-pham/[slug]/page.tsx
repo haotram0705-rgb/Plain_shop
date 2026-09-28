@@ -1,11 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { catalogProducts, findCatalogProduct, formatProductPrice, isInStock, productSlug, StoreProduct } from '@/features/products/catalog';
 
-export default function ProductDetailPage({ params }: { params: { slug: string } }) {
-  const [product, setProduct] = useState<StoreProduct | undefined>(() => findCatalogProduct(params.slug));
+export default function ProductDetailPage() {
+  const { slug } = useParams<{ slug: string }>();
+  const router = useRouter();
+  const [product, setProduct] = useState<StoreProduct | undefined>(() => findCatalogProduct(slug));
   const [quantity, setQuantity] = useState(1);
   const [size, setSize] = useState('');
   const [pot, setPot] = useState('Chậu sứ');
@@ -17,14 +20,14 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
   useEffect(() => {
     const savedCatalog = window.localStorage.getItem('plant_shop_products');
     const catalog = savedCatalog ? JSON.parse(savedCatalog) as StoreProduct[] : catalogProducts;
-    const current = findCatalogProduct(params.slug, catalog);
+    const current = findCatalogProduct(slug, catalog);
     setProduct(current);
     if (current?.sizes?.[0]) setSize(current.sizes[0]);
     const favorites = JSON.parse(window.localStorage.getItem('plant_shop_favorites') || '[]') as string[];
     const compareItems = JSON.parse(window.localStorage.getItem('plant_shop_compare') || '[]') as string[];
     setSaved(Boolean(current && favorites.includes(current.name)));
     setCompare(Boolean(current && compareItems.includes(current.name)));
-  }, [params.slug]);
+  }, [slug]);
 
   function toggleSaved() {
     if (!product) return;
@@ -52,7 +55,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
     window.localStorage.setItem('plant_shop_cart', JSON.stringify(next));
     window.dispatchEvent(new Event('plant-shop-cart-updated'));
     if (goToCart) {
-      window.location.href = '/gio-hang';
+      router.push('/gio-hang');
       return;
     }
     setNotice('Đã thêm sản phẩm vào giỏ hàng.');

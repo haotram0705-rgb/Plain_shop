@@ -1,12 +1,14 @@
 import { render, screen } from '@testing-library/react'
 import App from './App'
 
-describe('App', () => {
-  it('renders the storefront navigation and checkout entry point', () => {
+describe('Static Plant Shop app', () => {
+  it('renders the new storefront home and public shop navigation', () => {
     render(<App />)
-    expect(screen.getByText('GreenNest', { selector: 'strong' })).toBeTruthy()
-    expect(screen.getAllByRole('button', { name: /Sản phẩm/i }).length).toBeGreaterThan(0)
-    expect(screen.getByRole('button', { name: /Đăng nhập/i })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /Xác nhận đặt hàng/i })).toBeTruthy()
+
+    expect(screen.getByText('Plant', { selector: 'strong' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: /Cho trải nghiệm không chỉ là cây cảnh/i })).toBeTruthy()
+    expect(screen.getAllByRole('link', { name: /Cửa hàng/i }).length).toBeGreaterThan(1)
+    expect(screen.getAllByRole('link', { name: /Giỏ hàng/i }).length).toBeGreaterThan(0)
+    expect(screen.queryByRole('link', { name: /Đăng nhập/i })).toBeNull()
   })
 })

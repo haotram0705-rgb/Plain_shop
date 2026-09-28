@@ -43,17 +43,25 @@ export default function ServicesPage() {
     setImageName(file.name);
     setUploadProgress(8);
     setUploadedUrl('');
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (!apiUrl) {
+      setImageName(file.name);
+      setUploadedUrl(URL.createObjectURL(file));
+      setUploadProgress(100);
+      setNotice('Ảnh chỉ xem trước trên thiết bị này. Tải ảnh cần API công khai được cấu hình.');
+      return;
+    }
     const data = new FormData();
     data.append('file', file);
     const request = new XMLHttpRequest();
-    request.open('POST', `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/media/public-upload`);
+    request.open('POST', `${apiUrl.replace(/\/$/, '')}/media/public-upload`);
     request.upload.onprogress = (event) => {
       if (event.lengthComputable) setUploadProgress(Math.max(8, Math.round((event.loaded / event.total) * 100)));
     };
     request.onload = () => {
       if (request.status >= 200 && request.status < 300) {
         const payload = JSON.parse(request.responseText) as { url?: string };
-        setUploadedUrl(payload.url || URL.createObjectURL(file));
+        setUploadedUrl(payload.url ? new URL(payload.url, apiUrl).href : URL.createObjectURL(file));
         setUploadProgress(100);
         setNotice('');
       } else {
@@ -75,30 +83,35 @@ export default function ServicesPage() {
     document.getElementById('bao-gia')?.scrollIntoView({ behavior: 'smooth' });
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const existing = JSON.parse(window.localStorage.getItem('plant_shop_consultations') || '[]') as Array<Record<string, unknown>>;
-    existing.unshift({
-      id: `quote-${Date.now()}`,
-      name: form.name,
-      contact: form.contact,
-      need: form.note || 'Yêu cầu báo giá dịch vụ',
-      related: form.service,
-      service: form.service,
-      budget: form.budget,
-      imageName,
-      imageUrl: uploadedUrl,
-      sourceUrl: window.location.href,
-      createdAt: new Date().toISOString(),
-      status: 'new',
-      assignee: '',
-    });
-    window.localStorage.setItem('plant_shop_consultations', JSON.stringify(existing));
-    setNotice('Đã nhận yêu cầu báo giá. Plant Shop sẽ liên hệ lại để khảo sát.');
-    setForm({ name: '', contact: '', budget: '', note: '', service: services[0].title });
-    setImageName('');
-    setUploadedUrl('');
-    setUploadProgress(0);
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (!apiUrl) {
+      setNotice('Biểu mẫu trực tuyến chưa được kết nối. Vui lòng liên hệ Plant Shop để nhận báo giá.');
+      return;
+    }
+    try {
+      const response = await fetch(`${apiUrl.replace(/\/$/, '')}/consultations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          contact: form.contact,
+          need: [form.note, form.budget && `Ngân sách dự kiến: ${form.budget}`].filter(Boolean).join(' · ') || 'Yêu cầu báo giá dịch vụ',
+          related: form.service,
+          sourceUrl: window.location.href,
+          attachmentUrl: uploadedUrl.startsWith('http') ? uploadedUrl : undefined,
+        }),
+      });
+      if (!response.ok) throw new Error('Không thể gửi yêu cầu lúc này.');
+      setNotice('Đã nhận yêu cầu báo giá. Plant Shop sẽ liên hệ lại để khảo sát.');
+      setForm({ name: '', contact: '', budget: '', note: '', service: services[0].title });
+      setImageName('');
+      setUploadedUrl('');
+      setUploadProgress(0);
+    } catch {
+      setNotice('Không thể gửi yêu cầu. Vui lòng thử lại hoặc liên hệ Plant Shop qua hotline.');
+    }
   }
 
   return (

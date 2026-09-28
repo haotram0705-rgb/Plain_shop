@@ -2,15 +2,16 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { navigation } from '@/config/navigation';
 import { SearchButton } from './SearchButton';
 
 type CartEntry = { quantity: number };
 const megaPreviewImages: Record<string, string> = { 'Cây cảnh': '/assets/images/cat-indoor.jpg', 'Chậu & vật tư': '/assets/images/cat-pots.jpg', 'Hoa & quà tặng': '/assets/images/cat-services.jpg', 'Tư vấn & thiết kế': '/assets/images/cat-outdoor.jpg', 'Chăm sóc cây': '/assets/images/cat-services.jpg', 'Thi công & cho thuê': '/assets/images/cat-indoor.jpg', 'Đọc & học': '/assets/images/cat-desk.jpg', 'Dự án & truyền thông': '/assets/images/cat-outdoor.jpg', 'Cộng đồng': '/assets/images/cat-services.jpg' };
 
-export function Header() {
+export function Header({ staticSite = false }: { staticSite?: boolean }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [cartCount, setCartCount] = useState(0);
   const [customerName, setCustomerName] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
@@ -79,14 +80,14 @@ export function Header() {
             <SearchButton />
             <span className="hotline">HOTLINE: 0909 123 456</span>
             <Link className="cart-button" href="/gio-hang"><span className="cart-label">Giỏ hàng</span><span>{cartCount}</span></Link>
-            {isAdmin && <Link className="pos-link" href="/admin/giao-dien">POS</Link>}
-            {customerName ? <div className="account-menu-wrap"><button className="customer-avatar" type="button" title={customerName} aria-label={`Tài khoản ${customerName}`} onClick={() => setAccountMenuOpen((open) => !open)}>{customerName.slice(0, 1).toUpperCase()}</button>{accountMenuOpen && <div className="account-menu">{!isAdmin && <Link href="/tai-khoan" onClick={() => setAccountMenuOpen(false)}>Tài khoản của tôi</Link>}<label>Ngôn ngữ<select value={language} onChange={(event) => changeLanguage(event.target.value)}><option value="vi">Tiếng Việt</option><option value="en">English</option></select></label><button type="button" onClick={logout}>Đăng xuất</button></div>}</div> : <Link className="admin-entry" href="/dang-nhap">Đăng nhập</Link>}
+            {!staticSite && isAdmin && <Link className="pos-link" href="/admin/giao-dien">POS</Link>}
+            {!staticSite && (customerName ? <div className="account-menu-wrap"><button className="customer-avatar" type="button" title={customerName} aria-label={`Tài khoản ${customerName}`} onClick={() => setAccountMenuOpen((open) => !open)}>{customerName.slice(0, 1).toUpperCase()}</button>{accountMenuOpen && <div className="account-menu">{!isAdmin && <Link href="/tai-khoan" onClick={() => setAccountMenuOpen(false)}>Tài khoản của tôi</Link>}<label>Ngôn ngữ<select value={language} onChange={(event) => changeLanguage(event.target.value)}><option value="vi">Tiếng Việt</option><option value="en">English</option></select></label><button type="button" onClick={logout}>Đăng xuất</button></div>}</div> : <Link className="admin-entry" href="/dang-nhap">Đăng nhập</Link>)}
           </div>
         </div>
         <nav className="desktop-nav" aria-label="Menu chính">
           {navigation.map((item) => item.children ? (
             <div className={`nav-dropdown${item.label === 'Dịch vụ' ? ' nav-dropdown-service' : ''}${item.megaSections ? ' nav-dropdown-mega' : ''}`} key={`${item.label}-${item.href}`}>
-              <button className={`nav-dropdown-trigger${pathname === item.href || pathname.startsWith(`${item.href}/`) ? ' active' : ''}`} type="button" onClick={() => { window.location.href = item.href; }}>{isHomePage && item.label === 'Thư viện & câu chuyện' ? 'Tin tức và sự kiện' : item.label}</button>
+              <button className={`nav-dropdown-trigger${pathname === item.href || pathname.startsWith(`${item.href}/`) ? ' active' : ''}`} type="button" onClick={() => router.push(item.href)}>{isHomePage && item.label === 'Thư viện & câu chuyện' ? 'Tin tức và sự kiện' : item.label}</button>
               {item.megaSections ? (
                 <div className="nav-dropdown-menu nav-mega-menu">
                   <div className="mega-heading"><strong>{item.label === 'Dịch vụ' ? 'Chăm chút một không gian xanh' : item.label === 'Thư viện & câu chuyện' ? 'Đọc, xem và hiểu thêm về cây' : 'Chọn một góc xanh'}</strong><span>{item.label === 'Dịch vụ' ? 'Từ tư vấn, chăm cây đến thi công.' : item.label === 'Thư viện & câu chuyện' ? 'Câu chuyện, video và những dự án xanh của Plant Shop.' : 'Cây, chậu và quà tặng được chọn kỹ.'}</span></div>

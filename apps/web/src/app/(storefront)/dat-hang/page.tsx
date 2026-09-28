@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
 
 export default function CheckoutPage() {
+  const router = useRouter();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
@@ -39,14 +41,20 @@ export default function CheckoutPage() {
     setSubmitting(true);
     setSubmitMessage('Đang kiểm tra giá và tồn kho...');
     const cart = JSON.parse(window.localStorage.getItem('plant_shop_cart') || '[]') as Array<{ productId?: string; sku?: string; name?: string; quantity: number }>;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (!apiUrl) {
+      setSubmitMessage('Đặt hàng trực tuyến chưa được kết nối. Vui lòng liên hệ Plant Shop để được hỗ trợ.');
+      setSubmitting(false);
+      return;
+    }
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/orders`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ buyerName: name, buyerPhone: phone, recipientName: name, recipientPhone: phone, address: `${address}${coordinates ? ` (GPS: ${coordinates})` : ''}`, note, paymentMethod: payment, shippingMethod: shipping, shippingFee: shipping === 'standard' ? 30000 : undefined, items: cart.map((item) => ({ productId: item.productId, sku: item.sku, name: item.name?.split(' · ')[0], quantity: item.quantity })) }) });
+      const response = await fetch(`${apiUrl.replace(/\/$/, '')}/orders`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ buyerName: name, buyerPhone: phone, recipientName: name, recipientPhone: phone, address: `${address}${coordinates ? ` (GPS: ${coordinates})` : ''}`, note, paymentMethod: payment, shippingMethod: shipping, shippingFee: shipping === 'standard' ? 30000 : undefined, items: cart.map((item) => ({ productId: item.productId, sku: item.sku, name: item.name?.split(' · ')[0], quantity: item.quantity })) }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.message || 'Không thể tạo đơn hàng.');
       window.localStorage.setItem('plant_shop_customer', JSON.stringify({ name, phone, address }));
       window.localStorage.setItem('plant_shop_order_location', JSON.stringify({ address, coordinates, shipping, payment, note }));
       window.localStorage.removeItem('plant_shop_cart');
-      window.location.href = `/xac-nhan-don?code=${encodeURIComponent(result.code)}`;
+      router.push(`/xac-nhan-don?code=${encodeURIComponent(result.code)}`);
     } catch (error) {
       setSubmitMessage(error instanceof Error ? error.message : 'Không thể kết nối máy chủ.');
       setSubmitting(false);
