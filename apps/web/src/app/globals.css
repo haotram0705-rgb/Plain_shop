@@ -11,15 +11,6 @@
   --card: #fffdf8;
   --border: #ddd7c9;
   --ink-soft: #4d5946;
-  --home-forest: #124c3b;
-  --home-forest-deep: #08261b;
-  --home-gold: #f4c96c;
-  --home-cta: #35b51d;
-  --home-white: #fffdf5;
-  --home-border: rgba(255, 253, 245, 0.66);
-  --home-display-font: 'Lora', Georgia, serif;
-  --home-body-font: 'Be Vietnam Pro', Arial, sans-serif;
-  --home-hero-shade: linear-gradient(90deg, rgba(5, 24, 16, .78), rgba(5, 24, 16, .34) 60%, rgba(5, 24, 16, .12)), linear-gradient(0deg, rgba(5, 24, 16, .46), transparent 42%);
 }
 
 * {

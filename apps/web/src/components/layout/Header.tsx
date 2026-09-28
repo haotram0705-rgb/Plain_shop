@@ -69,7 +69,7 @@ export function Header({ staticSite = false }: { staticSite?: boolean }) {
   const isHomePage = pathname === '/';
 
   return (
-    <header className={`store-header${isHomePage ? ' store-header-home' : ''}`}>
+    <header className="store-header">
       <div className="container store-header-inner">
         <div className="store-header-top">
           <Link className="brand" href="/">

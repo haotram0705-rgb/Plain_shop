@@ -110,7 +110,7 @@ export function PromotionCarousel() {
 
   return (
     <section
-      className="promotion-carousel promotion-carousel-home"
+      className="promotion-carousel"
       aria-label="Khuyến mãi nổi bật"
       aria-roledescription="carousel"
       tabIndex={0}

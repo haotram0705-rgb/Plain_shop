@@ -1,4 +1,4 @@
-# Hướng dẫn chỉnh website GreenNest
+# Hướng dẫn chỉnh website Plant Shop
 
 Website đã được hợp nhất thành một bố cục React duy nhất trong `src/App.jsx` và `src/styles.css`. Các nhóm sản phẩm dùng chung `CatalogPage`, nên cây cảnh, chậu & vật tư và hoa & quà tặng đều hiển thị cùng cấu trúc: ảnh, giá, tồn kho, thông tin và nút thêm giỏ.
 
@@ -17,7 +17,7 @@ Website đã được hợp nhất thành một bố cục React duy nhất tron
 
 Album không còn là trang public. Sau khi đăng nhập tài khoản admin, mở `/admin.html` và chọn **Quản lý album ảnh**, hoặc vào `/admin-album.html`.
 
-Ảnh được lưu tạm trong `localStorage` với khóa `greennest-album-images`. Đây là lưu cục bộ theo trình duyệt, chưa phải upload server. Khi triển khai thật, thay phần này bằng API media và phân quyền ở backend.
+Ảnh được lưu tạm trong `localStorage` với khóa `plant-shop-album-images`. Đây là lưu cục bộ theo trình duyệt, chưa phải upload server. Khi triển khai thật, thay phần này bằng API media và phân quyền ở backend.
 
 ## Chạy thử
 

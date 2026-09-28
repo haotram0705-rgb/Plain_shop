@@ -1,5 +1,4 @@
 import '../globals.css';
-import './homepage-reference.css';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { MobileTabBar } from '@/components/layout/MobileTabBar';
