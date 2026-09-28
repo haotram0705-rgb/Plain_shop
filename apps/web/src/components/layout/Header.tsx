@@ -81,7 +81,42 @@ export function Header({ staticSite = false }: { staticSite?: boolean }) {
             <span className="hotline">HOTLINE: 0909 123 456</span>
             <Link className="cart-button" href="/gio-hang"><span className="cart-label">Giỏ hàng</span><span>{cartCount}</span></Link>
             {!staticSite && isAdmin && <Link className="pos-link" href="/admin/giao-dien">POS</Link>}
-            {!staticSite && (customerName ? <div className="account-menu-wrap"><button className="customer-avatar" type="button" title={customerName} aria-label={`Tài khoản ${customerName}`} onClick={() => setAccountMenuOpen((open) => !open)}>{customerName.slice(0, 1).toUpperCase()}</button>{accountMenuOpen && <div className="account-menu">{!isAdmin && <Link href="/tai-khoan" onClick={() => setAccountMenuOpen(false)}>Tài khoản của tôi</Link>}<label>Ngôn ngữ<select value={language} onChange={(event) => changeLanguage(event.target.value)}><option value="vi">Tiếng Việt</option><option value="en">English</option></select></label><button type="button" onClick={logout}>Đăng xuất</button></div>}</div> : <Link className="admin-entry" href="/dang-nhap">Đăng nhập</Link>)}
+            {customerName ? (
+              <div className="account-menu-wrap">
+                <button
+                  className="customer-avatar"
+                  type="button"
+                  title={customerName}
+                  aria-label={`Tài khoản ${customerName}`}
+                  onClick={() => setAccountMenuOpen((open) => !open)}
+                >
+                  {customerName.slice(0, 1).toUpperCase()}
+                </button>
+                {accountMenuOpen && (
+                  <div className="account-menu">
+                    {!isAdmin && (
+                      <Link href="/tai-khoan" onClick={() => setAccountMenuOpen(false)}>
+                        Tài khoản của tôi
+                      </Link>
+                    )}
+                    <label>
+                      Ngôn ngữ
+                      <select value={language} onChange={(event) => changeLanguage(event.target.value)}>
+                        <option value="vi">Tiếng Việt</option>
+                        <option value="en">English</option>
+                      </select>
+                    </label>
+                    <button type="button" onClick={logout}>
+                      Đăng xuất
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link className="admin-entry" href="/dang-nhap">
+                Đăng nhập
+              </Link>
+            )}
           </div>
         </div>
         <nav className="desktop-nav" aria-label="Menu chính">

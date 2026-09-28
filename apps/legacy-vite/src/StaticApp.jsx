@@ -18,6 +18,9 @@ import ArticlesPage from '@/app/(storefront)/bai-viet/page';
 import StoryDetailPage from '@/app/(storefront)/bai-viet/[slug]/page';
 import LibraryPage from '@/app/(storefront)/thu-vien/page';
 import MediaPage from '@/app/(storefront)/truyen-thong/page';
+import LoginPage from '@/app/(storefront)/dang-nhap/page';
+import RegisterPage from '@/app/(storefront)/dang-ky/page';
+import AccountPage from '@/app/(storefront)/tai-khoan/page';
 
 const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/';
 
@@ -75,6 +78,9 @@ export default function StaticApp() {
           <Route path="/bai-viet/:slug" element={<StoryDetailPage />} />
           <Route path="/thu-vien" element={<LibraryPage />} />
           <Route path="/truyen-thong" element={<MediaPage />} />
+          <Route path="/dang-nhap" element={<LoginPage />} />
+          <Route path="/dang-ky" element={<RegisterPage />} />
+          <Route path="/tai-khoan" element={<AccountPage />} />
           <Route path="/chinh-sach/:slug" element={<PolicyPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
