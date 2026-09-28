@@ -80,7 +80,7 @@ export function Header({ staticSite = false }: { staticSite?: boolean }) {
             <SearchButton />
             <span className="hotline">HOTLINE: 0909 123 456</span>
             <Link className="cart-button" href="/gio-hang"><span className="cart-label">Giỏ hàng</span><span>{cartCount}</span></Link>
-            {!staticSite && isAdmin && <Link className="pos-link" href="/admin/giao-dien">POS</Link>}
+            {!staticSite && isAdmin && <Link className="pos-link" href="/admin/pos">POS</Link>}
             {customerName ? (
               <div className="account-menu-wrap">
                 <button

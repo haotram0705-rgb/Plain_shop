@@ -249,7 +249,7 @@ export function CustomerAuthForm({ mode }: { mode: AuthMode }) {
     window.setTimeout(() => {
       const nextPath = new URLSearchParams(window.location.search).get('next');
       if (role === 'admin') {
-        router.push(nextPath && nextPath.startsWith('/admin') ? nextPath : '/admin/giao-dien');
+        router.push(nextPath && nextPath.startsWith('/admin') ? nextPath : '/admin');
       } else {
         router.push(nextPath?.startsWith('/') && !nextPath.startsWith('//') ? nextPath : '/tai-khoan');
       }

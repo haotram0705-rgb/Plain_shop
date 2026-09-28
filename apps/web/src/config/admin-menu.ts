@@ -1,5 +1,6 @@
 export const adminMenu = [
   { label: 'Tổng quan', href: '/admin' },
+  { label: 'POS Bán hàng', href: '/admin/pos' },
   { label: 'Sản phẩm', href: '/admin/san-pham' },
   { label: 'Danh mục', href: '/admin/danh-muc' },
   { label: 'Kho hàng', href: '/admin/kho-hang' },
