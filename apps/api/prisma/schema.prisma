@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  SALES
+  EDITOR
+}
+
+enum OrderStatus {
+  PENDING_CONFIRMATION
+  CONFIRMED
+  PACKING
+  SHIPPING
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum ConsultationStatus {
+  NEW
+  PROCESSING
+  COMPLETED
+}
+
+model User {
+  id           String          @id @default(uuid())
+  email        String          @unique
+  name         String
+  passwordHash String
+  role         Role            @default(SALES)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  orders       Order[]
+  consultations Consultation[] @relation("Assignee")
+  auditLogs    AuditLog[]
+}
+
+model Product {
+  id           String           @id @default(uuid())
+  sku          String           @unique
+  slug         String           @unique
+  name         String
+  type         String
+  category     String
+  price        Int
+  costPrice    Int              @default(0)
+  stock        Int              @default(0)
+  reservedStock Int             @default(0)
+  image        String
+  status       String           @default("ACTIVE")
+  metadata     Json?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  orderItems   OrderItem[]
+  reservations StockReservation[]
+}
+
+model Coupon {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  type        String
+  value       Int
+  minSubtotal Int      @default(0)
+  maxDiscount Int?
+  usageLimit  Int?
+  usedCount   Int      @default(0)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model Order {
+  id             String        @id @default(uuid())
+  code           String        @unique
+  buyerName      String
+  buyerEmail     String?
+  buyerPhone     String
+  recipientName  String
+  recipientPhone String
+  address        String
+  note           String?
+  subtotal       Int
+  discount       Int           @default(0)
+  shippingFee    Int?
+  total          Int
+  couponCode     String?
+  shippingMethod String?
+  paymentMethod  String
+  status         OrderStatus   @default(PENDING_CONFIRMATION)
+  paymentStatus  PaymentStatus @default(PENDING)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  customerId     String?
+  customer       User?         @relation(fields: [customerId], references: [id])
+  items          OrderItem[]
+  reservations   StockReservation[]
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  productId String
+  name      String
+  sku       String
+  unitPrice Int
+  quantity  Int
+  lineTotal Int
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model StockReservation {
+  id        String   @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int
+  expiresAt DateTime
+  releasedAt DateTime?
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id])
+  @@index([expiresAt, releasedAt])
+}
+
+model Consultation {
+  id          String             @id @default(uuid())
+  name        String
+  contact     String
+  need        String
+  related     String?
+  sourceUrl   String?
+  attachmentUrl String?
+  status      ConsultationStatus @default(NEW)
+  assigneeId  String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  assignee    User?              @relation("Assignee", fields: [assigneeId], references: [id])
+}
+
+model Media {
+  id         String   @id @default(uuid())
+  filename   String
+  url        String
+  mimeType   String
+  size       Int
+  kind       String
+  createdAt  DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id])
+  @@index([entity, entityId])
+}

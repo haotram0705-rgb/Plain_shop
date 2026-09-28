@@ -1,0 +1,31 @@
+node_modules/
+.pnpm-store/
+.next/
+out/
+build/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Biến môi trường và bí mật
+.env
+.env.*
+!.env.example
+
+# Tệp tạm của IDE/hệ điều hành
+.vs/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Tệp upload/runtime
+uploads/
+*.sqlite
+*.sqlite3
+*.db
