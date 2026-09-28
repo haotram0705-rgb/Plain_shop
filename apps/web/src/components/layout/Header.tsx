@@ -9,7 +9,8 @@ import { SearchButton } from './SearchButton';
 type CartEntry = { quantity: number };
 const megaPreviewImages: Record<string, string> = { 'Cây cảnh': '/assets/images/cat-indoor.jpg', 'Chậu & vật tư': '/assets/images/cat-pots.jpg', 'Hoa & quà tặng': '/assets/images/cat-services.jpg', 'Tư vấn & thiết kế': '/assets/images/cat-outdoor.jpg', 'Chăm sóc cây': '/assets/images/cat-services.jpg', 'Thi công & cho thuê': '/assets/images/cat-indoor.jpg', 'Đọc & học': '/assets/images/cat-desk.jpg', 'Dự án & truyền thông': '/assets/images/cat-outdoor.jpg', 'Cộng đồng': '/assets/images/cat-services.jpg' };
 
-export function Header({ staticSite = false }: { staticSite?: boolean }) {
+export function Header({ staticSite = false }: { staticSite?: boolean } = {}) {
+  void staticSite;
   const pathname = usePathname();
   const router = useRouter();
   const [cartCount, setCartCount] = useState(0);
@@ -80,7 +81,7 @@ export function Header({ staticSite = false }: { staticSite?: boolean }) {
             <SearchButton />
             <span className="hotline">HOTLINE: 0909 123 456</span>
             <Link className="cart-button" href="/gio-hang"><span className="cart-label">Giỏ hàng</span><span>{cartCount}</span></Link>
-            {!staticSite && isAdmin && <Link className="pos-link" href="/admin/pos">POS</Link>}
+            <Link className="pos-link" href="/admin/pos">⚡ POS</Link>
             {customerName ? (
               <div className="account-menu-wrap">
                 <button

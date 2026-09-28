@@ -21,6 +21,7 @@ import MediaPage from '@/app/(storefront)/truyen-thong/page';
 import LoginPage from '@/app/(storefront)/dang-nhap/page';
 import RegisterPage from '@/app/(storefront)/dang-ky/page';
 import AccountPage from '@/app/(storefront)/tai-khoan/page';
+import AdminPosPage from '@/app/admin/(dashboard)/pos/page';
 
 const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/';
 
@@ -81,6 +82,7 @@ export default function StaticApp() {
           <Route path="/dang-nhap" element={<LoginPage />} />
           <Route path="/dang-ky" element={<RegisterPage />} />
           <Route path="/tai-khoan" element={<AccountPage />} />
+          <Route path="/admin/pos" element={<AdminPosPage />} />
           <Route path="/chinh-sach/:slug" element={<PolicyPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
