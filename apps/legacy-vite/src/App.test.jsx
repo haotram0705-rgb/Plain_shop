@@ -28,7 +28,6 @@ describe('Static Plant Shop app', () => {
 
     expect(screen.getByRole('heading', { name: /Đăng nhập/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /Đăng nhập →/i })).toBeTruthy()
-    expect(screen.getByText(/customer@plantshop.vn/i)).toBeTruthy()
   })
 
   it('renders register page when navigating to /dang-ky', () => {

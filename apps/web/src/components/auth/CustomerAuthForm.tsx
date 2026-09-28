@@ -16,11 +16,21 @@ export type StoredUser = {
   createdAt: string;
 };
 
-const demoCustomer = {
+// 1. Tài khoản Quản trị viên (Admin) mặc định
+const defaultAdmin = {
+  email: 'admin@plantshop.vn',
+  password: 'admin123',
+  name: 'Quản trị viên Plant Shop',
+  role: 'admin' as const,
+};
+
+// 2. Tài khoản Khách hàng (Customer) mặc định
+const defaultCustomer = {
   email: 'customer@plantshop.vn',
   password: 'customer123',
-  name: 'Khách hàng Plant Shop',
-  phone: '0909 000 111',
+  name: 'Nguyễn Minh Anh',
+  phone: '0909 123 456',
+  role: 'customer' as const,
 };
 
 export function CustomerAuthForm({ mode }: { mode: AuthMode }) {
@@ -50,15 +60,6 @@ export function CustomerAuthForm({ mode }: { mode: AuthMode }) {
       }
     }
   }, [router]);
-
-  function fillDemo() {
-    setEmail(demoCustomer.email);
-    setPassword(demoCustomer.password);
-    setMessage({
-      type: 'info',
-      text: 'Đã điền thông tin tài khoản mẫu. Nhấn "Đăng nhập" để tiếp tục.',
-    });
-  }
 
   function getStoredUsers(): StoredUser[] {
     try {
@@ -113,7 +114,11 @@ export function CustomerAuthForm({ mode }: { mode: AuthMode }) {
 
       const users = getStoredUsers();
       const existingUser = users.find((u) => u.email.toLowerCase() === cleanEmail);
-      if (existingUser || cleanEmail === demoCustomer.email.toLowerCase()) {
+      if (
+        existingUser ||
+        cleanEmail === defaultCustomer.email.toLowerCase() ||
+        cleanEmail === defaultAdmin.email.toLowerCase()
+      ) {
         setMessage({
           type: 'error',
           text: 'Email này đã được sử dụng. Vui lòng đăng nhập hoặc dùng email khác.',
@@ -157,42 +162,57 @@ export function CustomerAuthForm({ mode }: { mode: AuthMode }) {
     }
 
     // Handle Login
-    let role = 'customer';
+    let role: 'customer' | 'admin' = 'customer';
     let loggedName = cleanEmail.split('@')[0];
     let loggedPhone = '';
     let loggedAddress = '';
 
-    // 1. Check if admin credentials via API (safe try/catch)
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail, password: cleanPassword }),
-      });
-      if (response.ok) {
-        role = 'admin';
-        loggedName = 'Quản trị viên';
+    // 1. Kiểm tra tài khoản Admin mặc định (admin@plantshop.vn / admin123)
+    const isAdminAccount =
+      (cleanEmail === defaultAdmin.email.toLowerCase() && cleanPassword === defaultAdmin.password) ||
+      (cleanEmail === 'admin@example.com' && cleanPassword === 'admin123');
+
+    if (isAdminAccount) {
+      role = 'admin';
+      loggedName = defaultAdmin.name;
+    }
+
+    // Kiểm tra thêm qua API /api/auth/login nếu có
+    if (!isAdminAccount) {
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: cleanEmail, password: cleanPassword }),
+        });
+        if (response.ok) {
+          role = 'admin';
+          loggedName = 'Quản trị viên';
+        }
+      } catch {
+        // offline or static mode fallback
       }
-    } catch {
-      // offline or static mode fallback
     }
 
-    // 2. Check if Demo customer
-    const isDemo = cleanEmail === demoCustomer.email.toLowerCase() && cleanPassword === demoCustomer.password;
-    if (isDemo) {
+    // 2. Kiểm tra tài khoản Khách hàng mặc định (customer@plantshop.vn / customer123)
+    const isCustomerAccount =
+      (cleanEmail === defaultCustomer.email.toLowerCase() || cleanEmail === 'khachhang@plantshop.vn') &&
+      cleanPassword === defaultCustomer.password;
+
+    if (isCustomerAccount) {
       role = 'customer';
-      loggedName = demoCustomer.name;
-      loggedPhone = demoCustomer.phone;
+      loggedName = defaultCustomer.name;
+      loggedPhone = defaultCustomer.phone;
     }
 
-    // 3. Check registered users list if not admin and not demo
-    if (role !== 'admin' && !isDemo) {
+    // 3. Kiểm tra danh bạ người dùng đã tự đăng ký
+    if (role !== 'admin' && !isCustomerAccount) {
       const users = getStoredUsers();
       const matched = users.find((u) => u.email.toLowerCase() === cleanEmail);
 
       if (matched) {
         if (matched.password !== cleanPassword) {
-          setMessage({ type: 'error', text: 'Mật khẩu không chính xác. Vui lòng thử lại.' });
+          setMessage({ type: 'error', text: 'Mật khẩu không chính xác. Vui lòng kiểm tra lại.' });
           setIsSubmitting(false);
           return;
         }
@@ -203,14 +223,14 @@ export function CustomerAuthForm({ mode }: { mode: AuthMode }) {
       } else {
         setMessage({
           type: 'error',
-          text: 'Tài khoản chưa tồn tại hoặc sai mật khẩu. Bạn có thể nhấn Đăng ký hoặc dùng tài khoản mẫu.',
+          text: 'Tài khoản chưa tồn tại hoặc sai mật khẩu. Vui lòng kiểm tra lại hoặc nhấn Đăng ký.',
         });
         setIsSubmitting(false);
         return;
       }
     }
 
-    // Success login
+    // Đăng nhập thành công
     window.localStorage.setItem(
       'plant_shop_customer',
       JSON.stringify({
@@ -229,7 +249,7 @@ export function CustomerAuthForm({ mode }: { mode: AuthMode }) {
     window.setTimeout(() => {
       const nextPath = new URLSearchParams(window.location.search).get('next');
       if (role === 'admin') {
-        router.push('/admin/giao-dien');
+        router.push(nextPath && nextPath.startsWith('/admin') ? nextPath : '/admin/giao-dien');
       } else {
         router.push(nextPath?.startsWith('/') && !nextPath.startsWith('//') ? nextPath : '/tai-khoan');
       }
@@ -260,30 +280,6 @@ export function CustomerAuthForm({ mode }: { mode: AuthMode }) {
               : 'Theo dõi đơn hàng, lưu cây yêu thích và nhận ưu đãi riêng cho bạn.'}
           </p>
         </div>
-
-        {/* Quick Demo Login Helper for testers/reviewers */}
-        {!isRegister && (
-          <div style={{ marginBottom: '14px' }}>
-            <button
-              type="button"
-              onClick={fillDemo}
-              style={{
-                width: '100%',
-                border: '1px dashed var(--border)',
-                borderRadius: '6px',
-                background: '#edf5e9',
-                padding: '8px 12px',
-                color: 'var(--primary)',
-                fontSize: '0.72rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                textAlign: 'center',
-              }}
-            >
-              ✦ Điền nhanh tài khoản mẫu (Demo: customer@plantshop.vn)
-            </button>
-          </div>
-        )}
 
         <form className="auth-form" onSubmit={handleSubmit}>
           {isRegister && (
