@@ -7,6 +7,7 @@ Website bán cây cảnh, vật tư và dịch vụ chăm sóc cây, gồm store
 - `apps/web`: Next.js 14, React 18, TypeScript
 - `apps/api`: NestJS 10, Prisma 5, PostgreSQL
 - `packages/contracts`: kiểu dữ liệu dùng chung
+- `apps/legacy-vite`: ứng dụng React/Vite cũ, giữ workflow deploy GitHub Pages
 - `infra`: cấu hình Docker cho môi trường phát triển
 
 ## Yêu cầu
@@ -32,6 +33,7 @@ Thay toàn bộ giá trị mẫu trong file `.env` bằng cấu hình thật. Kh
 ```bash
 pnpm dev:web
 pnpm dev:api
+pnpm dev:vite # ứng dụng Vite cũ
 ```
 
 Frontend: `http://localhost:3000`
@@ -66,7 +68,8 @@ pnpm build:api
 
 ## Triển khai GitHub
 
-1. Kiểm tra lại bằng `pnpm lint` và hai lệnh build.
-2. Chỉ thêm file mã nguồn và file cấu hình không nhạy cảm.
-3. Không đưa `.env`, token, khóa API, database, thư mục upload hoặc file IDE vào repository.
-4. Nếu từng commit bí mật, xoay vòng/đổi bí mật trước khi công khai repository.
+- Push lên `main` sẽ chạy `.github/workflows/deploy.yml`, cài dependencies tại `apps/legacy-vite/`, build Vite và deploy static site lên GitHub Pages.
+- GitHub Pages không chạy Next.js SSR hoặc NestJS API; các app `apps/web` và `apps/api` hiện cần nền tảng/server phù hợp riêng.
+- Trước khi phát hành, kiểm tra `pnpm lint`, `pnpm build:web` và `pnpm build:api`.
+- Không đưa `.env`, token, khóa API, database, thư mục upload hoặc file IDE vào repository.
+- Nếu từng commit bí mật, xoay vòng/đổi bí mật trước khi công khai repository.

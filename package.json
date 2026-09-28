@@ -7,7 +7,8 @@
     "node": ">=18.17.0"
   },
   "workspaces": [
-    "apps/*",
+    "apps/web",
+    "apps/api",
     "packages/*"
   ],
   "scripts": {
@@ -15,6 +16,8 @@
     "dev:api": "pnpm --dir apps/api dev",
     "build:web": "pnpm --dir apps/web build",
     "build:api": "pnpm --dir apps/api build",
+    "dev:vite": "npm --prefix apps/legacy-vite run dev",
+    "build:vite": "npm --prefix apps/legacy-vite run build",
     "lint": "pnpm -r lint"
   }
 }

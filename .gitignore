@@ -7,12 +7,12 @@ dist/
 coverage/
 *.tsbuildinfo
 
-# Biến môi trường và bí mật
+# Environment files and secrets
 .env
 .env.*
 !.env.example
 
-# Tệp tạm của IDE/hệ điều hành
+# IDE and operating-system files
 .vs/
 .idea/
 .DS_Store
@@ -24,7 +24,7 @@ pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Tệp upload/runtime
+# Runtime data and uploads
 uploads/
 *.sqlite
 *.sqlite3
