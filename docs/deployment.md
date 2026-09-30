@@ -34,6 +34,12 @@ npm --prefix apps/legacy-vite run build
 
 Sau khi build xong, workflow deploy trên push `main`. Theo dõi trạng thái tại GitHub repository → **Actions**. Khi workflow hoàn tất, mở `https://haotram0705-rgb.github.io/Plain_shop/`.
 
-## Ứng dụng Next.js server
+## Ứng dụng Next.js và POS quản trị
 
-`apps/web` vẫn là ứng dụng Next.js 14 có middleware/API đăng nhập; nó không còn là deployment target của GitHub Pages. Muốn chạy toàn bộ phần server/admin của Next.js, cần một host hỗ trợ Node.js và triển khai API/database riêng.
+`apps/web` là ứng dụng Next.js 14 có middleware và route API đăng nhập; GitHub Pages không chạy được runtime này. Để sử dụng trang quản trị/POS:
+
+- Deploy `apps/web` lên host hỗ trợ Next.js/Node.js; deploy `apps/api` và PostgreSQL riêng.
+- Cấu hình `API_URL` cho Next server để proxy xác thực sang `apps/api`.
+- Cấu hình `AUTH_SECRET` giống hệt giữa `apps/web` và `apps/api`, tối thiểu 32 ký tự ngẫu nhiên; chỉ đặt ở server environment, không commit.
+- `apps/web/.env.example` liệt kê các biến local mẫu. Không dùng tài khoản admin hardcode hoặc `localStorage` làm cơ chế phân quyền.
+- POS chỉ hiển thị sau khi Next xác minh cookie phiên HttpOnly có chữ ký hợp lệ và role nhân viên được cho phép (`OWNER`, `SALES`, `EDITOR`). Middleware chuyển người chưa đăng nhập về `/dang-nhap?next=/admin/...`.

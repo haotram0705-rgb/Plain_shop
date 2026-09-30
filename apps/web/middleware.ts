@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ADMIN_SESSION_COOKIE, verifyAdminSessionToken } from '@/lib/admin-session';
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const isAdminRoute = pathname.startsWith('/admin') && pathname !== '/admin/dang-nhap';
-  const hasSession = request.cookies.get('plant_shop_session')?.value === 'admin';
+export async function middleware(request: NextRequest) {
+  const token = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
+  const session = await verifyAdminSessionToken(token);
 
-  if (isAdminRoute && !hasSession) {
-    const loginUrl = new URL('/admin/dang-nhap', request.url);
-    loginUrl.searchParams.set('next', pathname);
+  if (!session) {
+    const loginUrl = new URL('/dang-nhap', request.url);
+    loginUrl.searchParams.set('next', request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
-  }
-
-  if (pathname === '/admin/dang-nhap' && hasSession) {
-    return NextResponse.redirect(new URL('/admin', request.url));
   }
 
   return NextResponse.next();

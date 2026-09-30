@@ -10,7 +10,6 @@ type CartEntry = { quantity: number };
 const megaPreviewImages: Record<string, string> = { 'Cây cảnh': '/assets/images/cat-indoor.jpg', 'Chậu & vật tư': '/assets/images/cat-pots.jpg', 'Hoa & quà tặng': '/assets/images/cat-services.jpg', 'Tư vấn & thiết kế': '/assets/images/cat-outdoor.jpg', 'Chăm sóc cây': '/assets/images/cat-services.jpg', 'Thi công & cho thuê': '/assets/images/cat-indoor.jpg', 'Đọc & học': '/assets/images/cat-desk.jpg', 'Dự án & truyền thông': '/assets/images/cat-outdoor.jpg', 'Cộng đồng': '/assets/images/cat-services.jpg' };
 
 export function Header({ staticSite = false }: { staticSite?: boolean } = {}) {
-  void staticSite;
   const pathname = usePathname();
   const router = useRouter();
   const [cartCount, setCartCount] = useState(0);
@@ -34,29 +33,57 @@ export function Header({ staticSite = false }: { staticSite?: boolean } = {}) {
     function syncAuth() {
       const authenticated = window.localStorage.getItem('plant_shop_authenticated') === 'true';
       const customer = window.localStorage.getItem('plant_shop_customer');
-      const role = window.localStorage.getItem('plant_shop_role');
       if (!authenticated || !customer) {
         setCustomerName('');
-        setIsAdmin(false);
         return;
       }
       try {
         const profile = JSON.parse(customer) as { name?: string };
         setCustomerName(profile.name || 'Khách hàng');
-        setIsAdmin(role === 'admin');
-      } catch { setCustomerName('Khách hàng'); setIsAdmin(false); }
+      } catch { setCustomerName('Khách hàng'); }
+    }
+    async function syncAdminSession() {
+      if (staticSite) {
+        setIsAdmin(false);
+        return;
+      }
+      try {
+        const response = await fetch('/api/auth/session', { cache: 'no-store' });
+        if (!response.ok) {
+          setIsAdmin(false);
+          if (window.localStorage.getItem('plant_shop_role') === 'admin') {
+            window.localStorage.removeItem('plant_shop_authenticated');
+            window.localStorage.removeItem('plant_shop_role');
+            setCustomerName('');
+          }
+          return;
+        }
+        const session = await response.json() as { authenticated?: boolean; user?: { role?: string; name?: string } };
+        const allowedRole = ['OWNER', 'SALES', 'EDITOR'].includes(session.user?.role || '');
+        const authenticatedAdmin = session.authenticated === true && allowedRole;
+        setIsAdmin(authenticatedAdmin);
+        if (authenticatedAdmin && session.user?.name) setCustomerName(session.user.name);
+      } catch {
+        setIsAdmin(false);
+      }
+    }
+    function syncAuthentication() {
+      syncAuth();
+      void syncAdminSession();
     }
     syncCart();
-    syncAuth();
+    syncAuthentication();
     setLanguage(window.localStorage.getItem('plant_shop_language') || 'vi');
     window.addEventListener('plant-shop-cart-updated', syncCart);
-    window.addEventListener('plant-shop-auth-updated', syncAuth);
-    return () => { window.removeEventListener('plant-shop-cart-updated', syncCart); window.removeEventListener('plant-shop-auth-updated', syncAuth); };
-  }, []);
+    window.addEventListener('plant-shop-auth-updated', syncAuthentication);
+    return () => { window.removeEventListener('plant-shop-cart-updated', syncCart); window.removeEventListener('plant-shop-auth-updated', syncAuthentication); };
+  }, [staticSite]);
 
-  function logout() {
+  async function logout() {
+    if (isAdmin && !staticSite) await fetch('/api/auth/logout', { method: 'POST' }).catch(() => undefined);
     window.localStorage.removeItem('plant_shop_authenticated');
     window.localStorage.removeItem('plant_shop_role');
+    setIsAdmin(false);
     window.dispatchEvent(new Event('plant-shop-auth-updated'));
     setAccountMenuOpen(false);
   }
@@ -81,7 +108,7 @@ export function Header({ staticSite = false }: { staticSite?: boolean } = {}) {
             <SearchButton />
             <span className="hotline">HOTLINE: 0909 123 456</span>
             <Link className="cart-button" href="/gio-hang"><span className="cart-label">Giỏ hàng</span><span>{cartCount}</span></Link>
-            <Link className="pos-link" href="/admin/pos">⚡ POS</Link>
+            {!staticSite && isAdmin && <Link className="pos-link" href="/admin/pos">⚡ POS</Link>}
             {customerName ? (
               <div className="account-menu-wrap">
                 <button

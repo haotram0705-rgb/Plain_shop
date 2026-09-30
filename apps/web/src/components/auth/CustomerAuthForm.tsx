@@ -11,20 +11,11 @@ export type StoredUser = {
   email: string;
   phone: string;
   password: string;
-  role: 'customer' | 'admin';
+  role: 'customer';
   address?: string;
   createdAt: string;
 };
 
-// 1. Tài khoản Quản trị viên (Admin) mặc định
-const defaultAdmin = {
-  email: 'admin@plantshop.vn',
-  password: 'admin123',
-  name: 'Quản trị viên Plant Shop',
-  role: 'admin' as const,
-};
-
-// 2. Tài khoản Khách hàng (Customer) mặc định
 const defaultCustomer = {
   email: 'customer@plantshop.vn',
   password: 'customer123',
@@ -52,11 +43,15 @@ export function CustomerAuthForm({ mode }: { mode: AuthMode }) {
     if (typeof window === 'undefined') return;
     setLogo(window.localStorage.getItem('plant_shop_logo') || '');
 
-    // Check if user is already authenticated
+    // Only customer state may redirect from the sign-in page; localStorage never authenticates admins.
     if (window.localStorage.getItem('plant_shop_authenticated') === 'true') {
+      const storedRole = window.localStorage.getItem('plant_shop_role');
       const nextPath = new URLSearchParams(window.location.search).get('next');
-      if (nextPath?.startsWith('/') && !nextPath.startsWith('//')) {
-        router.replace(nextPath);
+      if (storedRole === 'admin') {
+        window.localStorage.removeItem('plant_shop_authenticated');
+        window.localStorage.removeItem('plant_shop_role');
+      } else if (storedRole === 'customer' && !nextPath?.startsWith('/admin')) {
+        router.replace(nextPath?.startsWith('/') && !nextPath.startsWith('//') ? nextPath : '/tai-khoan');
       }
     }
   }, [router]);
@@ -116,8 +111,7 @@ export function CustomerAuthForm({ mode }: { mode: AuthMode }) {
       const existingUser = users.find((u) => u.email.toLowerCase() === cleanEmail);
       if (
         existingUser ||
-        cleanEmail === defaultCustomer.email.toLowerCase() ||
-        cleanEmail === defaultAdmin.email.toLowerCase()
+        cleanEmail === defaultCustomer.email.toLowerCase()
       ) {
         setMessage({
           type: 'error',
@@ -161,37 +155,27 @@ export function CustomerAuthForm({ mode }: { mode: AuthMode }) {
       return;
     }
 
-    // Handle Login
+    // Admin access is granted only by the server session endpoint. Browser storage is customer-only.
     let role: 'customer' | 'admin' = 'customer';
     let loggedName = cleanEmail.split('@')[0];
     let loggedPhone = '';
     let loggedAddress = '';
 
-    // 1. Kiểm tra tài khoản Admin mặc định (admin@plantshop.vn / admin123)
-    const isAdminAccount =
-      (cleanEmail === defaultAdmin.email.toLowerCase() && cleanPassword === defaultAdmin.password) ||
-      (cleanEmail === 'admin@example.com' && cleanPassword === 'admin123');
-
-    if (isAdminAccount) {
-      role = 'admin';
-      loggedName = defaultAdmin.name;
-    }
-
-    // Kiểm tra thêm qua API /api/auth/login nếu có
-    if (!isAdminAccount) {
-      try {
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: cleanEmail, password: cleanPassword }),
-        });
-        if (response.ok) {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, password: cleanPassword }),
+      });
+      if (response.ok) {
+        const result = await response.json() as { ok?: boolean; user?: { role?: string; name?: string } };
+        if (result.ok && ['OWNER', 'SALES', 'EDITOR'].includes(result.user?.role || '')) {
           role = 'admin';
-          loggedName = 'Quản trị viên';
+          loggedName = result.user?.name || 'Quản trị viên';
         }
-      } catch {
-        // offline or static mode fallback
       }
+    } catch {
+      // Admin sign-in requires the server-backed auth route; customer accounts remain separate.
     }
 
     // 2. Kiểm tra tài khoản Khách hàng mặc định (customer@plantshop.vn / customer123)
@@ -216,7 +200,7 @@ export function CustomerAuthForm({ mode }: { mode: AuthMode }) {
           setIsSubmitting(false);
           return;
         }
-        role = matched.role || 'customer';
+        role = 'customer';
         loggedName = matched.name;
         loggedPhone = matched.phone || '';
         loggedAddress = matched.address || '';
@@ -240,8 +224,13 @@ export function CustomerAuthForm({ mode }: { mode: AuthMode }) {
         address: loggedAddress,
       })
     );
-    window.localStorage.setItem('plant_shop_authenticated', 'true');
-    window.localStorage.setItem('plant_shop_role', role);
+    if (role === 'customer') {
+      window.localStorage.setItem('plant_shop_authenticated', 'true');
+      window.localStorage.setItem('plant_shop_role', 'customer');
+    } else {
+      window.localStorage.removeItem('plant_shop_authenticated');
+      window.localStorage.removeItem('plant_shop_role');
+    }
     window.dispatchEvent(new Event('plant-shop-auth-updated'));
 
     setMessage({ type: 'success', text: `Chào mừng trở lại, ${loggedName}!` });

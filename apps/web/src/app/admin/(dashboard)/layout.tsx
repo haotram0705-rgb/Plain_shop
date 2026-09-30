@@ -1,3 +1,4 @@
+import '../admin.css';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 

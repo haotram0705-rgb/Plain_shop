@@ -13,8 +13,6 @@ export function Footer() {
           <Link href="/cua-hang">Cửa hàng</Link>
           <Link href="/dich-vu">Dịch vụ</Link>
           <Link href="/lien-he">Liên hệ & Tư vấn</Link>
-          <Link href="/admin/pos" style={{ color: '#f5d27b', fontWeight: 600 }}>⚡ POS Bán hàng</Link>
-          <Link href="/admin">Quản trị Admin</Link>
         </div>
         <div>
           <span className="footer-label">Ghé thăm</span>
